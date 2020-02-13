@@ -44,17 +44,23 @@ int stack_free(Stack *s)
 
 int stack_push(Stack *s, char c)
 {
-    if (s->pos + 1 == STACK_SIZE)
-        return -1;  // can not push to the stack
-    
     int i = 0;
     // searching for somewhere to put the character
     for (; i < 128 && s->content[s->pos][i] != 0; ++i);
 
     if (i == 128)
-        return -2;  // no more space to put character
+        return -1;  // no more space to put character
 
     s->content[s->pos][i] = c;
+    return 0;  // everything went fine
+}
+
+int stack_next(Stack *s)
+{
+    if (s->pos + 1 == STACK_SIZE)
+        return -1;  // can not push to the stack
+    
+    s->pos++;
     return 0;  // everything went fine
 }
 

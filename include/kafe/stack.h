@@ -6,7 +6,7 @@
 
 typedef struct
 {
-    char** content;
+    char **content;
     unsigned pos;
 } Stack;
 
