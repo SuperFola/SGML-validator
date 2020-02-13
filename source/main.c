@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <kafe/fsm.h>
+
 int main(int argc, char **argv)
 {
     FILE *pFile;
@@ -16,10 +18,7 @@ int main(int argc, char **argv)
 
     if (pFile = fopen(filename, "rt"))
     {
-        for (c = fgetc(pFile); !feof(pFile); c = fgetc(pFile))
-        {
-            printf("%c", c);
-        }
+        fsm_run(pFile);
         fclose(pFile);
     }
     else
