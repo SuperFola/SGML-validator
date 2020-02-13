@@ -3,18 +3,15 @@
 
 #include <stdio.h>
 
-typedef struct
+enum State
 {
-    const int Start     = 0,
-        TagStart        = 1,
-        TagNameFeed     = 2,
-        TagAttr         = 3,
-        TagEnd          = 4,
-        ClosingTagStart = 5
-        ;
-
-    int state = Start;
-} State;
+    STATE_Start,
+    STATE_TagStart,
+    STATE_TagNameFeed,
+    STATE_TagAttr,
+    STATE_TagEnd,
+    STATE_ClosingTagStart
+};
 
 int fsm_run(FILE *pFile);
 

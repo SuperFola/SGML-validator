@@ -2,6 +2,7 @@
 #include <kafe/stack.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 int fsm_run(FILE *pFile)
 {
@@ -12,26 +13,26 @@ int fsm_run(FILE *pFile)
         return -1;
     }
 
-    State s;
+    int s = STATE_Start;
     char *closing_tag = (char*) calloc(LINE_LENGTH, sizeof(char));
     int i = 0;
 
     // reading characters from file until end
-    for (c = fgetc(pFile); !feof(pFile); c = fgetc(pFile))
+    for (char c = fgetc(pFile); !feof(pFile); c = fgetc(pFile))
     {
-        switch (s.state)
+        switch (s)
         {
-            case s.Start:
+            case STATE_Start:
                 if (c == '<')
-                    s.state = s.TagStart;
-                else if (c != ' ')  // we allow only skipping spaces
+                    s = STATE_TagStart;
+                else if (c != ' ' && c != '\r' && c != '\n')  // we allow only skipping spaces
                 {
-                    printf("Can't skip a character other than a space\n");
+                    printf("Can't skip a character other than a space: 0x%d\n", (int) c);
                     goto end;
                 }
                 break;
             
-            case s.TagStart:
+            case STATE_TagStart:
                 // a tag can only be composed of azAZ09
                 if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
                 {
@@ -40,13 +41,13 @@ int fsm_run(FILE *pFile)
                         printf("Couldn't push to stack\n");
                         goto end;
                     }
-                    s.state = s.TagNameFeed;
+                    s = STATE_TagNameFeed;
                 }
                 else if (c == '/')
                 {
-                    s.state = s.ClosingTagStart;
+                    s = STATE_ClosingTagStart;
                 }
-                else if (c == ' ')  // skip trailing spaces
+                else if (c == ' ' || c == '\r' || c == '\n')  // skip trailing spaces
                 {
                     continue;
                 }
@@ -57,7 +58,7 @@ int fsm_run(FILE *pFile)
                 }
                 break;
             
-            case s.TagNameFeed:
+            case STATE_TagNameFeed:
                 // a tag can only be composed of azAZ09
                 if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
                 {
@@ -67,14 +68,18 @@ int fsm_run(FILE *pFile)
                         goto end;
                     }
                 }
-                else if (c == ' ' || c == '>')  // if space, then maybe we have attributes
+                else if (c == ' ')  // if space, then maybe we have attributes
+                {
+                    s = STATE_TagAttr;
+                }
+                else if (c == '>')
                 {
                     if (stack_next(&stack) != 0)
                     {
                         printf("Couldn't add another element to the stack\n");
                         goto end;
                     }
-                    s.state = s.TagAttr;
+                    s = STATE_TagEnd;
                 }
                 else
                 {
@@ -83,23 +88,30 @@ int fsm_run(FILE *pFile)
                 }
                 break;
             
-            case s.TagAttr:
+            case STATE_TagAttr:
                 // a tag attribute can only be composed of azAZ09="'
                 if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '"' || c == '=')
                     continue;
                 else if (c == ' ')  // skip spaces
                     continue;
                 else if (c == '>')
-                    s.state = s.TagEnd;
+                {
+                    if (stack_next(&stack) != 0)
+                    {
+                        printf("Couldn't add another element to the stack\n");
+                        goto end;
+                    }
+                    s = STATE_TagEnd;
+                }
                 break;
             
-            case s.TagEnd:
+            case STATE_TagEnd:
                 // skip everything until a '<'
                 if (c == '<')
-                    s.state = s.TagStart;
+                    s = STATE_TagStart;
                 break;
             
-            case s.ClosingTagStart:
+            case STATE_ClosingTagStart:
                 // a tag can only be composed of azAZ09
                 if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
                 {
@@ -115,6 +127,8 @@ int fsm_run(FILE *pFile)
                 {
                     if (stack_cmp_top(&stack, closing_tag) == 0)
                     {
+                        i = 0;
+
                         // do not pop from empty stack
                         if (stack.pos == 0)
                         {
@@ -128,10 +142,11 @@ int fsm_run(FILE *pFile)
                             goto end;
                         }
                     }
+                    s = STATE_Start;
                 }
                 else
                 {
-                    printf("Wrong character in closing tag name");
+                    printf("Wrong character in closing tag name: 0x%d\n", (int) c);
                     goto end;
                 }
                 break;
@@ -139,12 +154,13 @@ int fsm_run(FILE *pFile)
             default:
                 break;
         }
+    }
 
-        if (stack->pos != 0)
-        {
-            printf("At least a tag wasn't closed properly!\n");
-            goto end;
-        }
+    if (stack.pos > 1)
+    {
+        printf("At least a tag wasn't closed properly!\n");
+        stack_print(&stack);
+        goto end;
     }
 
 end:

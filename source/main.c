@@ -7,7 +7,6 @@
 int main(int argc, char **argv)
 {
     FILE *pFile;
-    char c = 0;
 
     // getting filename to test
     char *filename = (char*) malloc(sizeof(char) * 128);
