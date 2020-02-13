@@ -71,11 +71,12 @@ int is_stack_empty(Stack *s)
 
 int stack_cmp_top(Stack *s, const char *value)
 {
-    return (strcmp(s->content[s->pos], value) == 0) ? 1 : 0;
+    return strcmp(s->content[s->pos - 1], value);
 }
 
 int stack_pop(Stack *s)
 {
+    s->pos--;
     if (memset(s->content[s->pos], 0, LINE_LENGTH) == NULL)
         return -1;  // couldn't set memory to 0s
     return 0;
