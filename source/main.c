@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        printf("Impossible d'ouvrir le fichier\n");
+        printf("Couldn't open file %s\n", filename);
         return EXIT_FAILURE;
     }
 
