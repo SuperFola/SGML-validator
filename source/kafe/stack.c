@@ -21,19 +21,17 @@ int stack_init(Stack *s)
         return -2;
     }
 
-    s->pos = 0;
     return 0;  // everything is fine
 }
 
-void element_free(Element **e)
+void element_free(Element *e)
 {
-    if ((*e)->next != NULL)
+    if (e->next != NULL)
     {
-        element_free(&((*e)->next));
+        element_free(e->next);
     }
-    free((*e)->content);
-    free(*e);
-    *e = NULL;
+    free(e->content);
+    free(e);
 }
 
 int stack_free(Stack *s)
@@ -41,7 +39,7 @@ int stack_free(Stack *s)
     if (s == NULL)
         return -1;  // stack wasn't initialized properly or was already freed
 
-    element_free(&(s->first));
+    //element_free(s->first);
     return 0;
 }
 
@@ -60,19 +58,18 @@ int stack_push(Stack *s, char c)
 
 int stack_next(Stack *s)
 {
-    s->pos++;
     Element *old = s->first;
     if ((s->first = (Element*) malloc(sizeof(Element))) == NULL)
     {
         stack_free(s);
         printf("Couldn't allocate new element on stack, quitting\n");
-        exit(-1);
+        return -1;
     }
     if ((s->first->content = (char*) malloc(sizeof(char) * LINE_LENGTH)) == NULL)
     {
         stack_free(s);
         printf("Couldn't allocate new element on stack, quitting\n");
-        exit(-1);
+        return -1;
     }
     s->first->next = old;
 
@@ -81,25 +78,47 @@ int stack_next(Stack *s)
 
 int is_stack_empty(Stack *s)
 {
+    if (s->first == NULL)
+        return -1;
     return (strlen(s->first->content) == 0) ? 1 : 0;
 }
 
 int stack_cmp_top(Stack *s, const char *value)
 {
-    return strcmp(s->first->next->content, value);
+    return strcmp(s->first->content, value);
 }
 
 int stack_pop(Stack *s)
 {
-    s->pos--;
-    if (memset(s->first->content, 0, LINE_LENGTH) == NULL)
-        return -1;  // couldn't set memory to 0s
+    Element *old = s->first->next;
+    free(s->first->content);
+    free(s->first);
+    s->first = old;
     return 0;
+}
+
+int stack_depth(Stack *s)
+{
+    int depth = 0;
+    Element *e = s->first;
+    if (e == NULL)
+        return depth;
+    
+    depth++;
+    while (1)
+    {
+        e = e->next;
+        if (e == NULL)
+            break;
+        depth++;
+    }
+
+    return depth;
 }
 
 void stack_print(Stack *s)
 {
-    printf("Depth: %d\n", s->pos);
+    printf("Depth: %d\n", stack_depth(s));
     Element *e = s->first;
     int i = 0;
     while (1)

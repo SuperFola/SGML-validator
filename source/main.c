@@ -23,8 +23,8 @@ int main(int argc, char **argv)
     else
     {
         printf("Couldn't open file %s\n", filename);
-        return EXIT_FAILURE;
+        return 1;
     }
 
-    return EXIT_SUCCESS;
+    return 0;
 }

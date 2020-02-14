@@ -1,5 +1,9 @@
-<h>
-    <b test></b>
+<hello>
+    <baba>
+        contenu à ignorer
+    </baba>
+
     <c a=12></c>
-</h>
-<a> </a>
+
+    <a></a>
+</hello>
