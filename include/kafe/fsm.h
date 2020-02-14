@@ -13,6 +13,8 @@ enum State
     STATE_ClosingTagStart
 };
 
+// main function for the finite state machine, taking a
+// pointer to the file to read
 int fsm_run(FILE *pFile);
 
 #endif  // fsm_h

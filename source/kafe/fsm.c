@@ -15,19 +15,21 @@ int fsm_run(FILE *pFile)
     }
 
     int s = STATE_Start;
-    char *closing_tag = (char*) calloc(LINE_LENGTH, sizeof(char));
-    int i = 0;
+    char *closing_tag = (char*) calloc(LINE_LENGTH, sizeof(char));  // needed to store the name of the closing tag we found
+    int i = 0;  // index of current character added to the closing tag
 
     // reading characters from file until end
     for (char c = fgetc(pFile); !feof(pFile); c = fgetc(pFile))
     {
-        // stack_print(&stack);
-        // printf("state: %d\n================\n", s);
+    #ifdef FSM_DEBUG
+        stack_print(&stack);
+        printf("state: %d\n================\n", s);
+    #endif  // FSM_DEBUG
 
         switch (s)
         {
             case STATE_Start:            // 0
-                if (c == '<')
+                if (c == '<')  // closing tag, change state
                     s = STATE_TagStart;
                 else if (c != ' ' && c != '\r' && c != '\n')  // we allow only skipping spaces
                 {
@@ -57,7 +59,7 @@ int fsm_run(FILE *pFile)
                     }
                     s = STATE_TagNameFeed;
                 }
-                else if (c == '/')
+                else if (c == '/')  // we found a closing tag
                 {
                     s = STATE_ClosingTagStart;
                 }
@@ -127,7 +129,7 @@ int fsm_run(FILE *pFile)
                         goto end;
                     }
                 }
-                else if (c == '>')
+                else if (c == '>')  // end of tag, check if it's valid
                 {
                     if (stack_cmp_top(&stack, closing_tag) == 0)
                     {
@@ -159,6 +161,7 @@ int fsm_run(FILE *pFile)
         }
     }
 
+    // checking if we have tags left on the stack
     if (stack_depth(&stack) > 0)
     {
         printf("At least a tag wasn't closed properly!\n");
