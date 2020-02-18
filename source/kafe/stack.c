@@ -14,12 +14,14 @@ int stack_init(Stack *s)
         free(s->first);
         return -2;  // couldn't init stack
     }
+    memset(s->first, 0, sizeof(Element));
 
     if ((s->first->content = (char*) malloc(sizeof(char) * LINE_LENGTH)) == NULL)
     {
         free(s->first->content);
         return -2;
     }
+    memset(s->first->content, 0, sizeof(char) * LINE_LENGTH);
 
     return 0;  // everything is fine
 }
@@ -39,7 +41,8 @@ int stack_free(Stack *s)
     if (s == NULL)
         return -1;  // stack wasn't initialized properly or was already freed
 
-    //element_free(s->first);
+    if (s->first != NULL)
+        element_free(s->first);
     return 0;
 }
 
@@ -65,12 +68,15 @@ int stack_next(Stack *s)
         printf("Couldn't allocate new element on stack, quitting\n");
         return -1;
     }
+    memset(s->first, 0, sizeof(Element));
+
     if ((s->first->content = (char*) malloc(sizeof(char) * LINE_LENGTH)) == NULL)
     {
         stack_free(s);
         printf("Couldn't allocate new element on stack, quitting\n");
         return -1;
     }
+    memset(s->first->content, 0, sizeof(char) * LINE_LENGTH);
     s->first->next = old;
 
     return 0;  // everything went fine
@@ -120,6 +126,11 @@ void stack_print(Stack *s)
 {
     printf("Depth: %d\n", stack_depth(s));
     Element *e = s->first;
+    if (s->first == NULL)
+    {
+        printf("== empty ==\n");
+        return;
+    }
     int i = 0;
     while (1)
     {
